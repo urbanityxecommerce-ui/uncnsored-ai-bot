@@ -1,0 +1,58 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile information.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Unique identifier for the user." },
+        "email": { "type": "string", "description": "User's email address." },
+        "displayName": { "type": "string", "description": "User's display name." },
+        "photoURL": { "type": "string", "description": "URL to user's profile photo." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the user account was created." }
+      },
+      "required": ["uid", "email"]
+    },
+    "ChatSession": {
+      "title": "ChatSession",
+      "description": "A single chat conversation session.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the session." },
+        "userId": { "type": "string", "description": "ID of the user who owns this session." },
+        "title": { "type": "string", "description": "Title of the chat session." },
+        "isPinned": { "type": "boolean", "description": "Whether the session is pinned." },
+        "lastUpdatedAt": { "type": "string", "format": "date-time", "description": "When the session was last updated." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the session was created." }
+      },
+      "required": ["id", "userId", "createdAt", "lastUpdatedAt"]
+    },
+    "Message": {
+      "title": "Message",
+      "description": "A single message within a chat session.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the message." },
+        "role": { "type": "string", "enum": ["user", "bot"], "description": "Role of the message sender." },
+        "content": { "type": "string", "description": "Text content of the message." },
+        "image": { "type": "string", "description": "Base64 encoded image data (optional)." },
+        "timestamp": { "type": "string", "format": "date-time", "description": "When the message was sent." }
+      },
+      "required": ["id", "role", "content", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles."
+    },
+    "/users/{userId}/sessions/{sessionId}": {
+      "schema": "ChatSession",
+      "description": "Chat sessions for a specific user."
+    },
+    "/users/{userId}/sessions/{sessionId}/messages/{messageId}": {
+      "schema": "Message",
+      "description": "Messages within a specific chat session."
+    }
+  }
+}

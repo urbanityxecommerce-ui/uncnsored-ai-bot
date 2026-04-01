@@ -1,0 +1,5 @@
+{
+  "name": "Aether AI",
+  "description": "A persistent, human-like, and uncensored AI companion with secure account storage.",
+  "requestFramePermissions": ["camera", "microphone"]
+}
