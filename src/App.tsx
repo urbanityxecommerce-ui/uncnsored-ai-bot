@@ -789,7 +789,7 @@ export default function App() {
     URL.revokeObjectURL(url);
   };
 
-  const generateResponse = async (history: Message[], currentInput: string, currentImage: string | null, sessionId: string) => {
+  const generateResponse = async (history: Message[], currentInput: string, currentImage: string | null, sessionId: string, retryCount = 0) => {
     if (!user) return;
     setIsLoading(true);
     setError(null);
@@ -854,28 +854,31 @@ export default function App() {
 
     } catch (err: any) {
       console.error("Chat Error:", err);
-      let errorMessage = "Failed to connect to the AI. Please check your connection and try again.";
       
-      try {
-        const parsedError = typeof err.message === 'string' && err.message.startsWith('{') ? JSON.parse(err.message) : err;
-        const isQuotaError = 
-          parsedError?.error?.code === 429 || 
-          parsedError?.status === "RESOURCE_EXHAUSTED" || 
-          err.status === 429 ||
-          err.code === 429 ||
-          err.message?.includes("429") || 
-          err.message?.includes("RESOURCE_EXHAUSTED") ||
-          err.message?.includes("quota");
+      const parsedError = typeof err.message === 'string' && err.message.startsWith('{') ? JSON.parse(err.message) : err;
+      const isQuotaError = 
+        parsedError?.error?.code === 429 || 
+        parsedError?.status === "RESOURCE_EXHAUSTED" || 
+        err.status === 429 ||
+        err.code === 429 ||
+        err.message?.includes("429") || 
+        err.message?.includes("RESOURCE_EXHAUSTED") ||
+        err.message?.includes("quota");
 
-        if (isQuotaError) {
-          errorMessage = "AI Rate Limit Exceeded. Please wait a moment before sending another message or check your API quota.";
-        } else if (parsedError?.error?.message) {
-          errorMessage = `AI Error: ${parsedError.error.message}`;
-        }
-      } catch (e) {
-        if (err.message?.includes("429") || err.message?.includes("RESOURCE_EXHAUSTED") || err.message?.includes("quota")) {
-          errorMessage = "AI Rate Limit Exceeded. Please wait a moment before sending another message.";
-        }
+      // Auto-retry once after 2 seconds if it's a quota error
+      if (isQuotaError && retryCount < 1) {
+        console.log("Quota exceeded, retrying in 2s...");
+        setTimeout(() => {
+          generateResponse(history, currentInput, currentImage, sessionId, retryCount + 1);
+        }, 2000);
+        return;
+      }
+
+      let errorMessage = "Failed to connect to the AI. Please check your connection and try again.";
+      if (isQuotaError) {
+        errorMessage = "AI Rate Limit Exceeded. Please wait a moment before sending another message or check your API quota.";
+      } else if (parsedError?.error?.message) {
+        errorMessage = `AI Error: ${parsedError.error.message}`;
       }
       
       setError(errorMessage);
